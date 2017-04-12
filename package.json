@@ -1,0 +1,20 @@
+{
+  "name": "time-clone",
+  "version": "0.0.1",
+  "description": "Clone worklogs between jiras",
+  "main": "index.js",
+  "dependencies": {
+    "commander": "^2.9.0",
+    "config": "^1.25.1",
+    "keypress": "^0.2.1",
+    "node-schedule": "^1.2.1",
+    "request": "^2.81.0",
+    "request-promise": "^4.2.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC"
+}
