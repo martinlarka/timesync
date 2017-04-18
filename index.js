@@ -21,11 +21,12 @@ program
 var auth =  new Buffer(username + ":" + password).toString("base64");
 var t2auth = new Buffer(username + ":" + password).toString("base64");
 var author = {};
+var ticket = {};
 
 if (!program.period) {
 	var j = schedule.scheduleJob('0 08-19 * * *', function() {
 		doLog('Scheduled search');
-		if (author !== {}) {
+		if (author !== {} && ticket !== {} && ticket !== {}) {
 			// Searching current month
 			updateWorklog();
 		} else {
@@ -42,7 +43,7 @@ if (!program.period) {
 
 		// Update last day
 		if (key && key.name == 'a') {
-			if (author !== {}) {
+			if (author !== {} && ticket !== {}) {
 				updateWorklog(new Date(new Date().setDate(new Date().getDate()-1)).toLocaleDateString());
 			} else {
 				doLog(colors.red('ERROR: Author not fetched'));
@@ -50,7 +51,7 @@ if (!program.period) {
 		}
 		// Update last week
 		if (key && key.name == 's') {
-			if (author !== {}) {
+			if (author !== {} && ticket !== {}) {
 				updateWorklog(new Date(new Date().setDate(new Date().getDate()-7)).toLocaleDateString());
 			} else {
 				doLog(colors.red('ERROR: Author not fetched'));
@@ -58,7 +59,7 @@ if (!program.period) {
 		}
 		// Update this month
 		if (key && key.name == 'd') {
-			if (author !== {}) {
+			if (author !== {} && ticket !== {}) {
 				updateWorklog();
 			} else {
 				doLog(colors.red('ERROR: Author not fetched'));
@@ -73,16 +74,17 @@ if (!program.period) {
 	process.stdin.resume();
 }
 
-
-rp(compSelf()).then(function (body) {
+var promise = Promise.all([rp(compSelf()),rp(getTicket(config.compentusTask))]);
+promise.then(function (r) {
 	logMessage(colors.green('Author fetched'));
-	author = JSON.parse(body);
+	author = JSON.parse(r[0]);
+	ticket = JSON.parse(r[1]);
 	if (program.period) {
 		// Only search specified period
 		updateWorklog(program.period[0], program.period[1]);
 	}
 	}).catch(function (err) {
-			doLog(colors.red.underline('Failed during Get Author'));
+			doLog(colors.red.underline('Failed during Get Author or ticket'));
 });
 
 function updateWorklog(dateFrom, dateTo) {
@@ -90,7 +92,7 @@ function updateWorklog(dateFrom, dateTo) {
 	var from = dateFrom ? dateFrom :  new Date(new Date().setDate(1)).toLocaleDateString();
 	var to = dateTo ? dateTo : new Date().toLocaleDateString();
 
-	logMessage(colors.blue('Updating from '+ from +' to ' + to));
+	logMessage(colors.blue('Updating from '+ from +' to ' + to + ' on ticket: ' + ticket.key + ' ' + ticket.summary));
 
 	var pAll = Promise.all([rp(tele2Work(from, to)),rp(compWork(from, to))]);
 	pAll.then(function(r) {
@@ -158,6 +160,15 @@ function logMessage(msg) {
 function compSelf() {
 	return { method: 'GET',
 		  	url:  config.compentusUrl + '/rest/auth/1/session',
+			headers: 
+			   	{ 'cache-control': 'no-cache',
+			   	authorization: auth,
+			   	accept: 'application/json' } };
+}
+
+function getTicket(ticket) {
+	return { method: 'GET',
+		  	url:  config.compentusUrl + '/rest/api/2/issue/' + ticket,
 			headers: 
 			   	{ 'cache-control': 'no-cache',
 			   	authorization: auth,
