@@ -7,6 +7,8 @@ var schedule = require('node-schedule');
 var _ = require('underscore');
 
 const JIRAWORKLOG = '/rest/tempo-timesheets/3/worklogs/';
+const JIRAAUTH = '/rest/auth/1/session';
+const JIRAISSUE = '/rest/api/2/issue/';
 
 function list(val) {
   return val.split(',');
@@ -162,7 +164,7 @@ function logMessage(msg) {
 
 function compSelf() {
 	return { method: 'GET',
-		  	url:  config.compentusUrl + '/rest/auth/1/session',
+		  	url:  config.compentusUrl + JIRAAUTH,
 			headers: 
 			   	{ 'cache-control': 'no-cache',
 			   	authorization: auth,
@@ -171,7 +173,7 @@ function compSelf() {
 
 function getTicket(ticket) {
 	return { method: 'GET',
-		  	url:  config.compentusUrl + '/rest/api/2/issue/' + ticket,
+		  	url:  config.compentusUrl + JIRAISSUE + ticket,
 			headers: 
 			   	{ 'cache-control': 'no-cache',
 			   	authorization: auth,
@@ -182,7 +184,7 @@ function tele2Work(from, to) {
 	return { method: 'GET',
 		  url: config.tele2Url + JIRAWORKLOG,
 		  qs: 
-		   { username: 'martlark',
+		   { username: config.tele2User,
 		     dateFrom: from,
 		     dateTo: to },
 		  headers: 
@@ -196,7 +198,7 @@ function compWork(from, to) {
 	return { method: 'GET',
 		  url: config.compentusUrl + JIRAWORKLOG,
 		  qs: 
-		   { username: 'martin.larka',
+		   { username: author.name,
 		     dateFrom: from,
 		     dateTo: to },
 		  headers: 

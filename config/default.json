@@ -1,5 +1,6 @@
 {
-	"username": "TESTUSER",
-	"CompentusURL": "https://compentus.atlassian.net",
-	"Tele2URL": "http://t2jiraqa"
+	"compentusUrl": "https://compentus.atlassian.net",
+	"compentusTask": "",
+	"tele2Url": "http://t2jiraqa",
+	"tele2User": ""
 }
