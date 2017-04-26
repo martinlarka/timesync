@@ -92,12 +92,13 @@ function updateWorklog(dateFrom, dateTo) {
 	var from = dateFrom ? dateFrom :  new Date(new Date().setDate(1)).toLocaleDateString();
 	var to = dateTo ? dateTo : new Date().toLocaleDateString();
 
-	logMessage(colors.blue('Updating from '+ from +' to ' + to + ' on ticket: ' + ticket.key + ' ' + ticket.summary));
+	logMessage(colors.blue('Updating from '+ from +' to ' + to + ' on ticket: ' + ticket.key + ' ' + ticket.fields.summary));
 
 	var pAll = Promise.all([rp(tele2Work(from, to)),rp(compWork(from, to))]);
 	pAll.then(function(r) {
 		var res = r.map((response) => { return JSON.parse(response)});
 		var group = _.groupBy(res[0], (wlog)=> {return wlog.dateStarted.split('T')[0]});
+		var totalMinutes = 0;
 
 		for (var key in group) {
 			logMessage(colors.magenta('Searching date: ' + key));
@@ -120,12 +121,14 @@ function updateWorklog(dateFrom, dateTo) {
 						adjustCompLogs(result, loggedTele2, loggedComp, comment);
 					} else {
 						// Update worklog
-						logMessage(colors.orange('Updating from ' + (result[0].timeSpentSeconds/3600) + 'h to ' + (loggedTele2/3600) + 'h on ' + config.compentusTask + ': ' + comment));
+						logMessage(colors.green('Updating from ' + (result[0].timeSpentSeconds/3600) + 'h to ' + (loggedTele2/3600) + 'h on ' + config.compentusTask + ': ' + comment));
 						rp(putWork(result[0].id, loggedTele2, comment)).catch((err)=>{doLog(colors.red.underline('Failed during put work'))});
 					}
 				}
 			}
+			totalMinutes += loggedTele2;
 		}
+		doLog(colors.magenta('Total hours logged: ' + totalMinutes/3600));
 	}, function(err) {
 		doLog(colors.red.underline('Failed during get work'));
 	});
