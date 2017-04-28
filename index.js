@@ -94,7 +94,7 @@ function updateWorklog(dateFrom, dateTo) {
 	var from = dateFrom ? dateFrom :  new Date(new Date().setDate(1)).toLocaleDateString();
 	var to = dateTo ? dateTo : new Date().toLocaleDateString();
 
-	logMessage(colors.blue('Updating from '+ from +' to ' + to + ' on ticket: ' + ticket.key + ' ' + ticket.fields.summary));
+	doLog(colors.blue('Updating from '+ from +' to ' + to + ' on ticket: ' + ticket.key + ' ' + ticket.fields.summary));
 
 	var pAll = Promise.all([rp(tele2Work(from, to)),rp(compWork(from, to))]);
 	pAll.then(function(r) {
