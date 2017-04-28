@@ -14,6 +14,7 @@ function list(val) {
   return val.split(',');
 }
 
+
 program
   .version('0.0.1')
   .option('-v, --verbose', 	'Extensive logging')
