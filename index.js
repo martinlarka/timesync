@@ -109,8 +109,8 @@ function updateWorklog(dateFrom, dateTo) {
 			// DIFF
 			var loggedComp =  _.reduce(_.pluck(result, 'timeSpentSeconds'), (m,n) => { return m + n;}, 0);
 			var loggedTele2 = _.reduce(_.pluck(group[key], 'timeSpentSeconds'), (m,n) => { return m + n;}, 0);
+			var comment = _.map(group[key], (x) => {return x.issue.key}).join(', ');
 			if (loggedComp !== loggedTele2) {
-				var comment = _.map(group[key], (x) => {return x.issue.key}).join(', ');
 				// UPDATE COMP WORKLOG
 				if (result.length === 0 || loggedComp === 0) {
 					// POST
@@ -123,10 +123,14 @@ function updateWorklog(dateFrom, dateTo) {
 						adjustCompLogs(result, loggedTele2, loggedComp, comment);
 					} else {
 						// Update worklog
-						logMessage(colors.green('Updating from ' + (result[0].timeSpentSeconds/3600) + 'h to ' + (loggedTele2/3600) + 'h on ' + config.compentusTask + ': ' + comment));
+						logMessage(colors.green('Updating spent time from ' + (result[0].timeSpentSeconds/3600) + 'h to ' + (loggedTele2/3600) + 'h on ' + config.compentusTask + ': ' + comment));
 						rp(putWork(result[0].id, loggedTele2, comment)).catch((err)=>{doLog(colors.red.underline('Failed during put work'))});
 					}
 				}
+			} else if (result.length === 1 && !_.isEqual(comment.split(', ').sort(), result[0].comment.split(', ').sort())) {
+				// Update comment
+				logMessage(colors.green('Updating comment from "' + result[0].comment + '" to "' + comment + '" on ' + config.compentusTask));
+				rp(putWork(result[0].id, loggedTele2, comment)).catch((err)=>{doLog(colors.red.underline('Failed during put work'))});
 			}
 			totalMinutes += loggedTele2;
 		}
