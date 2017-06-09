@@ -125,13 +125,13 @@ function updateWorklog(dateFrom, dateTo) {
 					} else {
 						// Update worklog
 						logMessage(colors.green('Updating spent time from ' + (result[0].timeSpentSeconds/3600) + 'h to ' + (loggedTele2/3600) + 'h on ' + config.compentusTask + ': ' + comment));
-						rp(putWork(result[0].id, loggedTele2, comment)).catch((err)=>{doLog(colors.red.underline('Failed during put work'))});
+						rp(putWork(loggedTele2, key + 'T00:00:00.000', comment, author, result[0].id)).catch((err)=>{doLog(colors.red.underline('Failed during put work: ' + err))});
 					}
 				}
 			} else if (result.length === 1 && !_.isEqual(comment.split(', ').sort(), result[0].comment.split(', ').sort())) {
 				// Update comment
 				logMessage(colors.green('Updating comment from "' + result[0].comment + '" to "' + comment + '" on ' + config.compentusTask));
-				rp(putWork(result[0].id, loggedTele2, comment)).catch((err)=>{doLog(colors.red.underline('Failed during put work'))});
+				rp(putWork(loggedTele2, key + 'T00:00:00.000', comment, author, result[0].id)).catch((err)=>{doLog(colors.red.underline('Failed during put work'))});
 			}
 			totalMinutes += loggedTele2;
 		}
@@ -152,7 +152,7 @@ function adjustCompLogs(result, loggedTele2, loggedComp, comment) {
 	} else {
 		// Update largest
 		logMessage(colors.blue('Updating from ' + (maxTicket.timeSpentSeconds/3600) + 'h to ' + ((loggedTele2 - loggedComp + maxTicket.timeSpentSeconds)/3600) + 'h on ' + config.compentusTask + ':' + comment));
-		rp(putWork(result[0].id, (loggedComp - maxTicket.timeSpentSeconds + loggedTele2), comment)).catch((err)=>{doLog(colors.red.underline('Failed during put work'))});
+		rp(putWork((loggedComp - maxTicket.timeSpentSeconds + loggedTele2), key + 'T00:00:00.000', comment, author, result[0].id)).catch((err)=>{doLog(colors.red.underline('Failed during put work'))});
 	}
 }
 
@@ -234,9 +234,9 @@ function postWork(timeSpent, dateStarted, comment, author) {
 			  json: true };
 }
 
-function putWork(logId, timeSpent, comment) {
+function putWork(timeSpent, dateStarted, comment, author, logId) {
 	return { method: 'PUT',
-				url: config.compentusUrl + JIRAWORKLOG + logId,
+			  url: config.compentusUrl + JIRAWORKLOG + logId,
 			  headers: 
 			   { 'cache-control': 'no-cache',
 			     'content-type': 'application/json',
@@ -244,9 +244,34 @@ function putWork(logId, timeSpent, comment) {
 			     accept: 'application/json' },
 			  body: 
 			   { timeSpentSeconds: timeSpent, 
+			     dateStarted: dateStarted, 
 			     comment: comment, 
-			     issue: { remainingEstimateSeconds: 0 } },
+			     author: {
+			     	self: author.self,
+			     	name: author.name
+			     },
+			     issue: { key: config.compentusTask, remainingEstimateSeconds: 0 },
+			     worklogAttributes: [],
+			     workAttributeValues: [] },
 			  json: true };
+}
+
+function putWork2(logId, timeSpent, comment, dateStarted) {
+	doLog(config.compentusUrl + JIRAWORKLOG + logId);
+	doLog(logId);
+	return { method: 'PUT',
+		url: config.compentusUrl + JIRAWORKLOG + logId,
+		headers: 
+		{ 'cache-control': 'no-cache',
+		 'content-type': 'application/json',
+		 authorization: auth,
+		 accept: 'application/json' },
+		body: 
+		{ timeSpentSeconds: timeSpent,
+		 dateStarted: dateStarted,  
+		 comment: comment,
+		 issue: { remainingEstimateSeconds: 0 } },
+		json: true };
 }
 
 function delWork(logId) {
